@@ -70,7 +70,6 @@ In this case, vaccination is not random. Instead, the most central nodes, those 
 To identify central/important vertices, we analyze their Closeness Centrality, which measures how quickly a vertex can reach others. It is calculated for each vertex as follows:  
 
 <img src="./assets/closeness-centrality.png" alt="Closeness Centrality" width="200" height="80">     
-<br></br>
 
 Where **d(u,y)** is the distance between the vertex being analyzed and the other vertex in question, calculated using **Dijkstra's algorithm**, for example, for shortest paths (this is done for each vertex other than **u**).
 

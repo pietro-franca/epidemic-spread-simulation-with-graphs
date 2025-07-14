@@ -3,89 +3,84 @@ import matplotlib.pyplot as plt
 import random
 import matplotlib.animation as animation
 
-def simulate_SIR(graph, beta, gamma, initial_infected, vaccinated_nodes):
-    state = {node: 'S' for node in graph.nodes}
-    for i in initial_infected:
-        state[i] = 'I'
+def simular_SIR(grafo, beta, gamma, infectados_iniciais, nos_vacinados):
+    estado = {n: 'S' for n in grafo.nodes}
+    for i in infectados_iniciais:
+        estado[i] = 'I'
 
-    for v in vaccinated_nodes:
-        if v != 0:
-            state[v] = 'R'  # already recovered or immunized
+    for v in nos_vacinados:
+      if v != 0:
+        estado[v] = 'R' # already recovered or immunized
 
-    infected_history = []
-    state_over_time = []
+    historia = []  
+    estados_temporais = []  
 
-    while 'I' in state.values():
-        state_over_time.append(state.copy())
+    while 'I' in estado.values():
+        estados_temporais.append(estado.copy()) 
 
-        new_state = state.copy()
-        for node in graph.nodes:
-            if state[node] == 'I':
-                for neighbor in graph.neighbors(node):
-                    weight = graph[node][neighbor].get('weight', 1.0)  # Edge weights affect transmission probability
-                    transmission_prob = beta * weight
-                    if state[neighbor] == 'S' and random.random() < transmission_prob:
-                        new_state[neighbor] = 'I'
+        novos_estados = estado.copy()
+        for n in grafo.nodes:
+            if estado[n] == 'I':
+                for vizinho in grafo.neighbors(n):
+                    peso = grafo[n][vizinho].get('peso', 1.0)  
+                    prob_transmissao = beta * peso
+                    if estado[vizinho] == 'S' and random.random() < prob_transmissao:
+                        novos_estados[vizinho] = 'I'
                 if random.random() < gamma:
-                    new_state[node] = 'R'
-        state = new_state
-        infected_history.append(list(state.values()).count('I'))
+                    novos_estados[n] = 'R'
+        estado = novos_estados
+        historia.append(list(estado.values()).count('I'))
 
-    state_over_time.append(state.copy())
-    return infected_history, state_over_time
+    estados_temporais.append(estado.copy()) 
+    return historia, estados_temporais
 
-# Parameters
-n_nodes = 70
-connection_prob = 0.085
+n = 70  
+p = 0.085  
 
-graph = nx.erdos_renyi_graph(n_nodes, connection_prob, seed=14)
-for u, v in graph.edges():
-    graph[u][v]['weight'] = random.choice([0.1, 0.3, 0.5, 0.9])
+grafo = nx.erdos_renyi_graph(n, p, seed=14)
+for u, v in grafo.edges():
+    grafo[u][v]['peso'] = random.choice([0.1, 0.3, 0.5, 0.9])
 
-beta = 0.7
-gamma = 0.4
-vaccinated_nodes = random.sample(list(graph.nodes()), k=30)
-initial_infected = [0]
+beta = 0.7   
+gamma = 0.4  
+nos_vacinados = random.sample(list(grafo.nodes()), k=30) 
+infectados_iniciais = [0]  
+resultado, estados_temporais = simular_SIR(grafo, beta, gamma, infectados_iniciais, nos_vacinados)
 
-infected_result, state_over_time = simulate_SIR(graph, beta, gamma, initial_infected, vaccinated_nodes)
-
-# Plot infection curve
-plt.plot(infected_result, label='Infected over time')
-plt.xlabel('Time')
-plt.ylabel('Number of Infected')
-plt.title('SIR Model Simulation on a Random Graph')
+plt.plot(resultado, label='Infectados ao longo do tempo')
+plt.xlabel('Tempo')
+plt.ylabel('Número de Infectados')
+plt.title('Simulação do Modelo SIR em um Grafo Aleatório')
 plt.legend()
 plt.grid(True)
 plt.show()
 
-# Plot graph with edge weights
-pos = nx.spring_layout(graph, seed=25)
-weights = [graph[u][v]['weight'] for u, v in graph.edges()]
-edge_colors = [plt.cm.viridis(w) for w in weights]
+pos = nx.spring_layout(grafo, seed=25) 
+pesos = [grafo[u][v]['peso'] for u, v in grafo.edges()]
+cores_arestas = [plt.cm.viridis(p) for p in pesos] 
 
 nx.draw(
-    graph, pos,
-    edge_color=edge_colors,
+    grafo, pos,
+    edge_color=cores_arestas,
     width=1.5,
     node_color='skyblue',
     with_labels=True,
     node_size=800
 )
-plt.title("Graph with Edge Weights Represented by Color")
+plt.title("Grafo com Pesos Representados por Cores")
 plt.show()
 
-# Create infection animation
-colors = {'S': 'blue', 'I': 'red', 'R': 'green'}
+cores = {'S': 'blue', 'I': 'red', 'R': 'green'}
 
 fig, ax = plt.subplots(figsize=(8, 6))
 
-def update(frame):
+def atualizar(frame):
     ax.clear()
-    current_state = state_over_time[frame]
-    node_colors = [colors[current_state[node]] for node in graph.nodes()]
-    nx.draw(graph, pos, node_color=node_colors, with_labels=False, ax=ax, node_size=300)
-    ax.set_title(f'Time: {frame}')
+    estado_atual = estados_temporais[frame]
+    cor_nos = [cores[estado_atual[n]] for n in grafo.nodes()]
+    nx.draw(grafo, pos, node_color=cor_nos, with_labels=False, ax=ax, node_size=300)
+    ax.set_title(f'Tempo: {frame}')
 
-ani = animation.FuncAnimation(fig, update, frames=len(state_over_time), interval=500, repeat=False)
-ani.save("epidemic_simulation.gif", writer='pillow')
+ani = animation.FuncAnimation(fig, atualizar, frames=len(estados_temporais), interval=500, repeat=False)
+ani.save("animacao_epidemia.gif", writer='pillow')
 plt.show()

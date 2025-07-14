@@ -3,69 +3,69 @@ import matplotlib.pyplot as plt
 import random
 import matplotlib.animation as animation
 
-def simulate_SIR(graph, beta, gamma, initial_infected):
-    state = {node: 'S' for node in graph.nodes}
-    for i in initial_infected:
-        state[i] = 'I'
+def simular_SIR(grafo, beta, gamma, infectados_iniciais):
+    estado = {n: 'S' for n in grafo.nodes}
+    for i in infectados_iniciais:
+        estado[i] = 'I'
 
-    infected_history = [] # list with the number of infected individuals over time
-    state_over_time = [] # list with the state of each node at each step
+    historia = []  # list with the number of infected people over time
+    estados_temporais = []  # list with the state of each node at each step
 
-    while 'I' in state.values():
-        state_over_time.append(state.copy())  # save current state
+    while 'I' in estado.values():
+        estados_temporais.append(estado.copy())  # saves current state
 
-        new_state = state.copy()
-        for node in graph.nodes:
-            if state[node] == 'I':
-                for neighbor in graph.neighbors(node):
-                    if state[neighbor] == 'S' and random.random() < beta:
-                        new_state[neighbor] = 'I'
+        novos_estados = estado.copy()
+        for n in grafo.nodes:
+            if estado[n] == 'I':
+                for vizinho in grafo.neighbors(n):
+                    if estado[vizinho] == 'S' and random.random() < beta:
+                        novos_estados[vizinho] = 'I'
                 if random.random() < gamma:
-                    new_state[node] = 'R'
-        state = new_state
-        infected_history.append(list(state.values()).count('I'))
+                    novos_estados[n] = 'R'
+        estado = novos_estados
+        historia.append(list(estado.values()).count('I'))
 
-    state_over_time.append(state.copy())  # save final state
-    return infected_history, state_over_time
+    estados_temporais.append(estado.copy())  # last state
+    return historia, estados_temporais
 
 # Parameters
-n_nodes = 100 # number of nodes
-connection_prob = 0.1 # connection probability (random graph)
-graph = nx.erdos_renyi_graph(n_nodes, connection_prob, seed=42)
+n = 100  # nodes number
+p = 0.1  # connection probability (random graph)
+grafo = nx.erdos_renyi_graph(n, p, seed=42)
 
 beta = 0.5   # probability of infection
 gamma = 0.2  # probability of recovery
-initial_infected = [0]  # starts with one infected node (index: 0)
+infectados_iniciais = [0]  # starts with one infected node (index: 0)
 
-infected_result, state_over_time = simulate_SIR(graph, beta, gamma, initial_infected)
+resultado, estados_temporais = simular_SIR(grafo, beta, gamma, infectados_iniciais)
 
-# Plot infection curve
-plt.plot(infected_result, label='Infected over time')
-plt.xlabel('Time')
-plt.ylabel('Number of Infected')
-plt.title('SIR Model Simulation on a Random Graph')
+# Plot results
+plt.plot(resultado, label='Infectados ao longo do tempo')
+plt.xlabel('Tempo')
+plt.ylabel('Número de Infectados')
+plt.title('Simulação do Modelo SIR em um Grafo Aleatório')
 plt.legend()
 plt.grid(True)
 plt.show()
 
-# Plot initial graph structure
-pos = nx.spring_layout(graph, seed=42)  # Layout for better visualization
-nx.draw(graph, pos, with_labels=True, node_color='skyblue', edge_color='gray', node_size=800)
-plt.title("Random Graph (Erdős–Rényi)")
+# Plot graph
+pos = nx.spring_layout(grafo, seed=42)
+nx.draw(grafo, pos, with_labels=True, node_color='skyblue', edge_color='gray', node_size=800)
+plt.title("Grafo Aleatório (Erdős–Rényi)")
 plt.show()
 
-# Create infection animation
-colors = {'S': 'blue', 'I': 'red', 'R': 'green'}
+# Simulate infection
+cores = {'S': 'blue', 'I': 'red', 'R': 'green'}
 
 fig, ax = plt.subplots(figsize=(8, 6))
 
-def update(frame):
+def atualizar(frame):
     ax.clear()
-    current_state = state_over_time[frame]
-    node_colors = [colors[current_state[node]] for node in graph.nodes()]
-    nx.draw(graph, pos, node_color=node_colors, with_labels=False, ax=ax, node_size=300)
-    ax.set_title(f'Time: {frame}')
+    estado_atual = estados_temporais[frame]
+    cor_nos = [cores[estado_atual[n]] for n in grafo.nodes()]
+    nx.draw(grafo, pos, node_color=cor_nos, with_labels=False, ax=ax, node_size=300)
+    ax.set_title(f'Tempo: {frame}')
 
-ani = animation.FuncAnimation(fig, update, frames=len(state_over_time), interval=500, repeat=False)
-ani.save("epidemic_simulation.gif", writer='pillow')
+ani = animation.FuncAnimation(fig, atualizar, frames=len(estados_temporais), interval=500, repeat=False)
+ani.save("animacao_epidemia.gif", writer='pillow')
 plt.show()
